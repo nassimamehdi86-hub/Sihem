@@ -53,24 +53,21 @@ function home(){
   const t=st(),p=prog(),total=Object.values(p).reduce((x,r)=>x+stars(r.pct),0);
   app.innerHTML=`<div class="hero"><div class="hi">أهلًا ${esc(kid.name)} 👋<small>هيا نحفظ ونجمع النجوم!</small></div><div class="chips"><span>🔥 ${t.streak} يوم</span><span>⭐ ${total}</span><span>🏅 مستوى ${lvl(t.xp)}</span></div><div class="xp"><i style="width:${t.xp%100}%"></i></div></div>${standalone()?'':'<div class="btn inst" id="inst">📲 ثبّت التطبيق على هاتفك</div>'}<div class="tiles">`+
   SUBJECTS.map(s=>{const ls=s.sections.flatMap(x=>x.lessons),d=ls.filter(l=>p[l.id]&&p[l.id].pct>=70).length;
-    return `<div class="tile" style="--c:${s.color}" data-id="${s.id}"><span class="em">${ICON[s.id]}</span><b>${s.name}</b><small>${d} / ${ls.length} دروس${chDone(s.id)?' · ✅ حصة اليوم':''}</small></div>`}).join('')+'</div>';
+    return `<div class="tile" style="--c:${s.color}" data-id="${s.id}"><span class="em">${ICON[s.id]}</span><b>${s.name}</b><small>${d} / ${ls.length} دروس</small></div>`}).join('')+'</div>';
   if($('#inst'))$('#inst').onclick=install;
   app.querySelectorAll('.tile').forEach(e=>e.onclick=()=>{const s=SUBJECTS.find(x=>x.id==e.dataset.id);go(()=>subject(s),s.name,s.color)});
 }
 function subject(s){
   const p=prog();
-  app.innerHTML=chronoCard(s)+(s.sections.some(x=>x.lessons.length)?s.sections.map(sec=>`<h2>${esc(sec.name)}</h2><div class="path">`+sec.lessons.map((l,i)=>{const r=p[l.id];
+  app.innerHTML=(s.sections.some(x=>x.lessons.length)?s.sections.map(sec=>`<h2>${esc(sec.name)}</h2><div class="path">`+sec.lessons.map((l,i)=>{const r=p[l.id];
     return `<div class="node ${i%2?'r':'l'}" data-l="${l.id}"><span class="dot ${r&&r.pct>=70?'done':''}">${i+1}</span><div><b dir="auto">${esc(l.title)}</b><small>${starsHtml(stars(r?r.pct:0))}</small></div></div>`}).join('')+'</div>').join(''):'<p class="hint">لا توجد دروس في هذه المادة بعد.</p>');
-  chronoBind(s);
   app.querySelectorAll('.node').forEach(e=>e.onclick=()=>{
     const l=s.sections.flatMap(x=>x.lessons).find(x=>x.id==e.dataset.l);go(()=>lesson(s,l),l.title,s.color)});
 }
-const videoHtml=([id,s=0,e=0])=>/\.mp4$/.test(id)?`<h2>🎬 شرح الدرس بالفيديو</h2><div class="vid vloc"><video src="${id}" controls playsinline preload="metadata"></video></div>`:`<h2>🎬 شرح الدرس بالفيديو</h2><div class="vid"><iframe src="https://www.youtube-nocookie.com/embed/${id}?rel=0${s?'&start='+s:''}${e?'&end='+e:''}" title="فيديو الدرس" loading="lazy" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe></div><p class="hint"><a href="https://youtu.be/${id}${s?'?t='+s:''}" target="_blank" rel="noopener">إن لم يعمل الفيديو هنا، شاهده على يوتيوب</a></p>`;
 function lesson(s,l){
   const r=prog()[l.id];
   app.innerHTML=`<h2 dir="auto">${esc(l.title)}</h2>${l.qs.length?`<div class="acts"><div class="btn" id="go">ابدأ الاختبار (${l.qs.length} سؤالًا)</div></div>${r?`<p class="hint">آخر نتيجة: ${r.last??r.pct}% · أفضل نتيجة: ${r.pct}%</p>`:''}`:'<p class="hint">لم تُضف أسئلة هذا الدرس بعد.</p>'}
   ${recBtn(l)}
-  ${l.v?videoHtml(l.v):''}
   ${l.pdf?`<div id="pdf" class="pdf"><p class="hint">جارٍ تحميل الدرس…</p></div><div class="acts"><a class="btn alt" href="${l.pdf}" target="_blank" rel="noopener">فتح الملف في صفحة مستقلة</a></div>`:'<p class="hint">سيُضاف نص هذا الدرس قريبًا.</p>'}`;
   if(l.qs.length)$('#go').onclick=()=>go(()=>quiz(s,l),l.title,s.color);
   if($('#rc'))$('#rc').onclick=()=>go(()=>recite(s,l),l.title,s.color);
